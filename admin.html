@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ADMIN • BORA JOGAR</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top left, #0a1f12, #050505);
+      background-attachment: fixed;
+      color: white;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Glassmorphism Header */
+    .glass {
+      background: rgba(10, 10, 10, 0.6);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .title-gradient {
+      background: linear-gradient(90deg, #ffffff, #22c55e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Botões */
+    .green-button {
+      background: #22c55e;
+      color: black;
+      transition: 0.3s;
+      font-weight: 700;
+    }
+    .green-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+    }
+    .secondary-button {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      transition: 0.3s;
+    }
+    .secondary-button:hover {
+      border-color: #22c55e;
+      color: #22c55e;
+    }
+
+    /* =========================================
+       SISTEMA DE CHAVEAMENTO (BRACKET)
+       ========================================= */
+    .bracket-container {
+      display: flex;
+      align-items: stretch;
+      gap: 3rem;
+      padding: 20px 0;
+      overflow-x: auto; /* Permite scroll horizontal se a tela for pequena */
+      padding-bottom: 2rem;
+    }
+
+    /* Cada rodada (Coluna) */
+    .round {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      gap: 20px;
+      min-width: 220px;
+    }
+
+    /* Caixa do Jogo */
+    .match {
+      background: #0d0d0d;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      transition: 0.3s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .match:hover {
+      border-color: #22c55e;
+      box-shadow: 0 0 15px rgba(34, 197, 94, 0.1);
+    }
+
+    /* Input dos times */
+    .team-input {
+      background: transparent;
+      color: white;
+      border: none;
+      outline: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 6px;
+      transition: 0.3s;
+    }
+    .team-input:focus {
+      background: rgba(34, 197, 94, 0.1);
+      color: #22c55e;
+    }
+    .team-input::placeholder {
+      color: rgba(255, 255, 255, 0.2);
+      font-weight: 400;
+    }
+
+    /* Divisória entre os times no confronto */
+    .divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.05);
+      width: 100%;
+    }
+
+    /* Caixa do Campeão (Destaque Maior) */
+    .champion-box {
+      background: rgba(34, 197, 94, 0.05);
+      border: 2px solid #22c55e;
+      box-shadow: 0 0 30px rgba(34, 197, 94, 0.2);
+      border-radius: 12px;
+      padding: 20px 12px;
+      text-align: center;
+    }
+    .champion-box .team-input {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #22c55e;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    /* Título das Colunas */
+    .round-title {
+      font-size: 0.75rem;
+      color: #22c55e;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      bottom: -100px;
+      right: 20px;
+      background: #22c55e;
+      color: black;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: bottom 0.5s ease-in-out;
+      z-index: 50;
+      box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+    }
+    #toast.show {
+      bottom: 20px;
+    }
+
+    /* Estilo das seções de esporte */
+    .sport-section {
+      background: rgba(255,255,255,0.01);
+      border-radius: 24px;
+      padding: 30px;
+      margin-bottom: 40px;
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="fixed top-0 w-full z-40 glass px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-black italic text-white">ADMIN <span class="text-[#22c55e]">•</span> BORA JOGAR</h1>
+    </div>
+    
+    <div class="flex gap-4">
+      <button onclick="window.location.href='index.html'" class="secondary-button px-5 py-2 rounded-xl text-sm font-medium">
+        Ver Dashboard
+      </button>
+      <button onclick="salvarDados()" class="green-button px-6 py-2 rounded-xl text-sm uppercase tracking-wide">
+        Salvar Alterações
+      </button>
+    </div>
+  </header>
+
+  <main class="pt-28 pb-20 px-6 max-w-[1400px] mx-auto">
+    
+    <div class="mb-12">
+      <h1 class="text-5xl font-black italic title-gradient mb-2 uppercase">Gestão de Chaves</h1>
+      <p class="text-zinc-400">Preencha os confrontos da esquerda para a direita. Salve para atualizar o sistema.</p>
+    </div>
+
+    <div id="bracket-container"></div>
+
+  </main>
+
+  <div id="toast">✅ Alterações salvas com sucesso!</div>
+
+  <script>
+    // Lista de Modalidades
+    const sports = ["Futsal", "Carimba", "Vôlei", "Xadrez", "Dança"];
+
+    // Função para gerar o HTML do Chaveamento de cada esporte
+    function generateBrackets() {
+      const container = document.getElementById("bracket-container");
+      
+      sports.forEach(sport => {
+        const prefix = sport.toLowerCase().replace("ê", "e").replace("ç", "c"); // Cria um prefixo seguro para o ID
+        
+        const sectionHTML = `
+          <section class="sport-section">
+            <div class="flex items-center gap-4 mb-8">
+              <div class="w-2 h-8 bg-green-500 rounded-full shadow-[0_0_15px_#22c55e]"></div>
+              <h2 class="text-3xl font-black text-white tracking-wide uppercase">${sport}</h2>
+            </div>
+
+            <div class="bracket-container">
+              
+              <div class="round">
+                <h3 class="round-title">Quartas de Final</h3>
+                <div class="match">
+                  <input type="text" id="${prefix}_q1_t1" class="team-input" placeholder="Time 1">
+                  <div class="divider"></div>
+                  <input type="text" id="${prefix}_q1_t2" class="team-input" placeholder="Time 2">
+                </div>
+                <div class="match">
+                  <input type="text" id="${prefix}_q2_t1" class="team-input" placeholder="Time 3">
+                  <div class="divider"></div>
+                  <input type="text" id="${prefix}_q2_t2" class="team-input" placeholder="Time 4">
+                </div>
+                <div class="match">
+                  <input type="text" id="${prefix}_q3_t1" class="team-input" placeholder="Time 5">
+                  <div class="divider"></div>
+                  <input type="text" id="${prefix}_q3_t2" class="team-input" placeholder="Time 6">
+                </div>
+                <div class="match">
+                  <input type="text" id="${prefix}_q4_t1" class="team-input" placeholder="Time 7">
+                  <div class="divider"></div>
+                  <input type="text" id="${prefix}_q4_t2" class="team-input" placeholder="Time 8">
+                </div>
+              </div>
+
+              <div class="round">
+                <h3 class="round-title">Semifinal</h3>
+                <div class="match">
+                  <input type="text" id="${prefix}_s1_t1" class="team-input" placeholder="Vencedor Q1">
+                  <div class="divider"></div>
+                  <input type="text" id="${prefix}_s1_t2" class="team-input" placeholder="Vencedor Q2">
+                </div>
+                <div class="match">
+                  <input type="text" id="${prefix}_s2_t1" class="team-input" placeholder="Vencedor Q3">
+                  <div class="divider"></div>
+                  <input type="text" id="${prefix}_s2_t2" class="team-input" placeholder="Vencedor Q4">
+                </div>
+              </div>
+
+              <div class="round">
+                <h3 class="round-title">Grande Final</h3>
+                <div class="match">
+                  <input type="text" id="${prefix}_f_t1" class="team-input" placeholder="Vencedor Semi 1">
+                  <div class="divider"></div>
+                  <input type="text" id="${prefix}_f_t2" class="team-input" placeholder="Vencedor Semi 2">
+                </div>
+              </div>
+
+              <div class="round">
+                <h3 class="round-title">Campeão</h3>
+                <div class="champion-box">
+                  <span class="text-[10px] text-green-500 font-bold tracking-widest uppercase block mb-2">🏆 Vencedor</span>
+                  <input type="text" id="${prefix}_champion" class="team-input" placeholder="TBD">
+                </div>
+              </div>
+
+            </div>
+          </section>
+        `;
+        container.innerHTML += sectionHTML;
+      });
+    }
+
+    // Inicializa a página gerando o HTML e carregando os dados
+    window.onload = () => {
+      generateBrackets();
+      carregarDados();
+    };
+
+    /*
+    =====================================
+    SISTEMA DE SALVAMENTO DINÂMICO
+    =====================================
+    */
+
+    function carregarDados() {
+      // Pega TODOS os inputs da página automaticamente
+      const inputs = document.querySelectorAll('.team-input');
+      
+      inputs.forEach(input => {
+        const savedValue = localStorage.getItem(input.id);
+        if (savedValue) {
+          input.value = savedValue;
+        }
+      });
+    }
+
+    function salvarDados() {
+      const inputs = document.querySelectorAll('.team-input');
+      
+      inputs.forEach(input => {
+        localStorage.setItem(input.id, input.value);
+      });
+
+      mostrarToast();
+    }
+
+    function mostrarToast() {
+      const toast = document.getElementById("toast");
+      toast.classList.add("show");
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+  </script>
+
+</body>
+</html>
